@@ -136,7 +136,7 @@
       {
         subdomains: "abcd", maxZoom: 20,
         attribution:
-          '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · Neighborhoods: NYC DOHMH',
+          '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · Neighborhoods: Pediacities / BetaNYC',
       }
     ).addTo(map);
 
@@ -163,14 +163,21 @@
     }).addTo(map);
 
     map.on("zoomend", updateLabelVisibility);
+    // Tap the map away from any neighborhood to dismiss the open card.
+    // Ignore the same click that just opened a neighborhood (guards against a
+    // polygon tap also registering as a base-map click).
+    map.on("click", () => {
+      if (Date.now() - lastHoodTapTs < 400) return;
+      if (el.sheet.classList.contains("open")) closeSheet();
+    });
     map.fitBounds([[40.495, -74.255], [40.915, -73.70]], { padding: [10, 10] });
     updateLabelVisibility();
   }
 
-  // Shorten long combined NTA names for on-map labels (full name stays in the card/search)
+  // Label text: drop a redundant borough suffix (e.g. "Chelsea, Staten Island" → "Chelsea").
+  // Full name is kept for the card and search.
   function shortLabel(name) {
-    if (name.length > 16 && name.includes("-")) return name.split("-")[0].trim();
-    return name;
+    return name.split(",")[0].trim();
   }
   function updateLabelVisibility() {
     const on = map.getZoom() >= LABEL_ZOOM;
@@ -189,7 +196,9 @@
     if (layer) layer.setStyle(styleFor(byId[id]));
   }
 
+  let lastHoodTapTs = 0;
   function onHoodTap(id) {
+    lastHoodTapTs = Date.now();
     if (SETTINGS.tapMode === "mark" && !hoodState(id).visited) {
       setVisited(id, true, /*silent*/ true);
       toast(byId[id].properties.name + " — colored in! 🎨");
@@ -638,7 +647,7 @@
        on <b>this device</b> — nothing is uploaded anywhere.</p>
        <p style="font-size:13px;line-height:1.6;color:#8a8a95">
        Because it's stored only on your device, use <b>Export my data</b> now and then to keep a backup —
-       especially before clearing your browser. Neighborhood boundaries: NYC Dept. of Health (NTA).
+       especially before clearing your browser. Neighborhood boundaries: Pediacities / BetaNYC.
        Basemap: CARTO / OpenStreetMap.</p>
        <div class="modal-close-row"><button class="btn btn-primary" data-close>Got it</button></div>`
     );

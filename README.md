@@ -12,10 +12,13 @@ fill up over the course of your trip.
 
 ## Features
 
-- 🗺️ **Interactive map** of all five boroughs — zoom and pan, built on real NYC
-  neighborhood boundaries (NYC DOHMH Neighborhood Tabulation Areas).
+- 🗺️ **Interactive map** of all five boroughs — zoom and pan across **268
+  neighborhoods** using the widely-recognized Pediacities / BetaNYC boundaries
+  (SoHo, NoHo, Nolita, DUMBO, a single Williamsburg, and so on).
 - 🏷️ **Named neighborhoods** — labels appear right on the map as you zoom in, so
   you can see where you are without tapping anything.
+- 👆 **Dismiss the card** by tapping elsewhere on the map, swiping it down, or
+  hitting the × — whichever's handiest.
 - 🎨 **Tap to color in** — each neighborhood gets its own distinct, evenly-spread
   pastel color when you mark it visited.
 - ⚙️ **Choose your tap behavior** (Settings) — either *tap to preview* (opens the
@@ -72,16 +75,18 @@ index.html                    markup + layout
 assets/style.css              styles
 assets/app.js                 map, interaction, state, search, locate, stats
 assets/db.js                  IndexedDB wrapper for photos
-data/neighborhoods.geojson    189 neighborhoods + parks, 5 boroughs
+data/neighborhoods.geojson    268 neighborhoods, 5 boroughs
 vendor/leaflet/               bundled Leaflet library
 ```
 
 ### Data
 
-Neighborhood boundaries come from NYC's **Neighborhood Tabulation Areas (NTA)**,
-published by the NYC Department of Health. Parks, cemeteries and airports are
-drawn as a soft green backdrop but aren't counted or tappable, leaving 189
-trackable neighborhoods.
+Neighborhood boundaries come from the **Pediacities NYC Neighborhoods** dataset
+(via BetaNYC / the HodgesWardElliott refinements) — the widely-adopted set of
+colloquial neighborhood names and boundaries (SoHo, NoHo, Nolita, DUMBO, a single
+Williamsburg, etc.), rather than the Census "tabulation areas" that split and
+rename familiar neighborhoods. Multi-part areas are merged so each neighborhood
+is one entry, giving 268 neighborhoods across the five boroughs.
 
 ## Ideas for later
 
