@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#fdfbf7" />
+  <title>New York, Explored</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BD%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-main">
+      <div class="brand">
+        <span class="brand-mark">🗽</span>
+        <div class="brand-text">
+          <h1>New York, Explored</h1>
+          <p id="brand-sub">Tap a neighborhood to color it in</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="pill-stat" id="stat-pill" title="See your progress">
+          <span id="stat-count">0</span><span class="pill-total">/189</span>
+        </button>
+        <button class="icon-btn" id="menu-btn" title="Menu" aria-label="Menu">
+          <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </header>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Search -->
+  <div class="search-wrap" id="search-wrap">
+    <div class="search-box">
+      <svg class="search-ico" viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search a neighborhood…" autocomplete="off" />
+      <button class="search-clear" id="search-clear" aria-label="Clear">&times;</button>
+    </div>
+    <ul class="search-results" id="search-results"></ul>
+  </div>
+
+  <!-- Locate button -->
+  <button class="fab locate-fab" id="locate-btn" title="Find where I am">
+    <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="12" cy="12" r="4" fill="currentColor"/><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><line x1="12" y1="1" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="4" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="20" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  </button>
+
+  <!-- Detail sheet -->
+  <aside class="sheet" id="sheet" aria-hidden="true">
+    <div class="sheet-grip"></div>
+    <button class="sheet-close" id="sheet-close" aria-label="Close">&times;</button>
+    <div class="sheet-body">
+      <div class="sheet-head">
+        <span class="color-dot" id="d-dot"></span>
+        <div>
+          <h2 id="d-name">Neighborhood</h2>
+          <span class="boro-badge" id="d-boro">Borough</span>
+        </div>
+      </div>
+
+      <button class="visit-toggle" id="d-visit">
+        <span class="vt-icon">✓</span>
+        <span class="vt-label">Mark as visited</span>
+      </button>
+      <p class="visit-meta" id="d-visitmeta"></p>
+
+      <label class="field-label" for="d-notes">Notes</label>
+      <textarea id="d-notes" placeholder="What did you think? What did you do here? What do you want to remember?"></textarea>
+      <p class="save-hint" id="d-savehint"></p>
+
+      <div class="photos-head">
+        <label class="field-label">Photos</label>
+        <button class="add-photo-btn" id="d-addphoto">
+          <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          Add photo
+        </button>
+        <input type="file" id="d-photoinput" accept="image/*" multiple hidden />
+      </div>
+      <div class="photo-grid" id="d-photos"></div>
+    </div>
+  </aside>
+
+  <!-- Menu dropdown -->
+  <div class="menu-pop" id="menu-pop" hidden>
+    <button data-act="stats">📊 Progress by borough</button>
+    <button data-act="export">⬇️ Export my data</button>
+    <button data-act="import">⬆️ Import a backup</button>
+    <button data-act="about">ℹ️ About this map</button>
+    <button data-act="reset" class="danger">🧹 Reset everything</button>
+    <input type="file" id="import-input" accept="application/json,.json" hidden />
+  </div>
+
+  <!-- Modal overlay (stats / about / confirm) -->
+  <div class="overlay" id="overlay" hidden>
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <!-- Photo lightbox -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lb-close" id="lb-close" aria-label="Close">&times;</button>
+    <img id="lb-img" alt="Neighborhood photo" />
+    <button class="lb-delete" id="lb-delete">Delete this photo</button>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="assets/db.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
