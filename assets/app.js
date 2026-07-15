@@ -66,7 +66,7 @@
     statCount: $("stat-count"), progressFill: $("progress-fill"), statPill: $("stat-pill"),
     menuBtn: $("menu-btn"), menuPop: $("menu-pop"), importInput: $("import-input"),
     overlay: $("overlay"), modal: $("modal"),
-    sheet: $("sheet"), sheetClose: $("sheet-close"),
+    sheet: $("sheet"), sheetClose: $("sheet-close"), sheetBody: document.querySelector(".sheet-body"),
     dDot: $("d-dot"), dName: $("d-name"), dBoro: $("d-boro"),
     dVisit: $("d-visit"), dVisitMeta: $("d-visitmeta"),
     dNotes: $("d-notes"), dSaveHint: $("d-savehint"),
@@ -242,11 +242,14 @@
     el.dSaveHint.classList.remove("show");
     syncSheetVisited(id);
     renderPhotos(id);
+    el.sheet.style.transform = "";
     el.sheet.classList.add("open");
     el.sheet.setAttribute("aria-hidden", "false");
+    if (el.sheetBody) el.sheetBody.scrollTop = 0;
   }
   function closeSheet() {
     el.sheet.classList.remove("open");
+    el.sheet.style.transform = "";
     el.sheet.setAttribute("aria-hidden", "true");
     currentId = null;
   }
@@ -268,6 +271,64 @@
     setVisited(currentId, !hoodState(currentId).visited);
   });
   el.sheetClose.addEventListener("click", closeSheet);
+
+  // Swipe-down to dismiss the bottom sheet (mobile layout only)
+  (function enableSheetSwipe() {
+    const sheet = el.sheet;
+    const body = sheet.querySelector(".sheet-body");
+    const isBottomSheet = () => !window.matchMedia("(min-width: 760px)").matches;
+    let drag = null;
+
+    sheet.addEventListener("touchstart", (e) => {
+      if (!isBottomSheet() || !sheet.classList.contains("open") || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      drag = {
+        startY: t.clientY, lastY: t.clientY, lastT: performance.now(), vel: 0,
+        engaged: false,
+        onHandle: !!e.target.closest(".sheet-grip, .sheet-head"),
+        interactive: !!e.target.closest("textarea, input, button, .photo-thumb, a"),
+        startScroll: body ? body.scrollTop : 0,
+      };
+    }, { passive: true });
+
+    sheet.addEventListener("touchmove", (e) => {
+      if (!drag) return;
+      const dy = e.touches[0].clientY - drag.startY;
+      if (!drag.engaged) {
+        // Engage only on a clear downward pull from the grip/header, or from the
+        // top of the (unscrolled) content — never while scrolling or on a control.
+        if (dy > 6 && (drag.onHandle || (drag.startScroll <= 0 && !drag.interactive))) {
+          drag.engaged = true;
+          sheet.classList.add("dragging");
+        } else if (dy < -2 || drag.interactive || drag.startScroll > 0) {
+          drag = null; // let the sheet body scroll normally
+          return;
+        } else {
+          return;
+        }
+      }
+      e.preventDefault();
+      const move = Math.max(0, dy);
+      sheet.style.transform = `translateY(${move}px)`;
+      const now = performance.now();
+      drag.vel = (e.touches[0].clientY - drag.lastY) / Math.max(1, now - drag.lastT);
+      drag.lastY = e.touches[0].clientY;
+      drag.lastT = now;
+    }, { passive: false });
+
+    function endDrag() {
+      if (!drag) return;
+      const d = drag; drag = null;
+      sheet.classList.remove("dragging");
+      if (!d.engaged) return;
+      const dy = Math.max(0, d.lastY - d.startY);
+      const h = sheet.getBoundingClientRect().height || 400;
+      sheet.style.transform = ""; // hand back to CSS transition
+      if (dy > h * 0.3 || d.vel > 0.55) closeSheet();
+    }
+    sheet.addEventListener("touchend", endDrag);
+    sheet.addEventListener("touchcancel", endDrag);
+  })();
 
   // Notes autosave
   let notesTimer = null;

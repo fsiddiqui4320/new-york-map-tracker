@@ -186,9 +186,19 @@ body {
   padding-bottom: var(--safe-bot);
 }
 .sheet.open { transform: translateY(0); }
+.sheet.dragging { transition: none; }
 .sheet-grip {
   width: 42px; height: 5px; border-radius: 3px; background: #e2ddd4;
   margin: 10px auto 2px;
+}
+/* Give the grip a bigger, obvious touch target for the swipe-to-close gesture */
+.sheet-grip {
+  position: relative; cursor: grab; touch-action: none;
+}
+.sheet-grip::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px; height: 26px;
 }
 .sheet-close {
   position: absolute; top: 12px; right: 14px;
