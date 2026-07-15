@@ -106,6 +106,19 @@ body {
 }
 .hood-tip::before { display: none; }
 
+/* On-map neighborhood labels (zoom-gated) */
+.hood-label {
+  background: transparent; border: none; box-shadow: none; padding: 0; margin: 0;
+  color: #34343d; font-weight: 700; font-size: 11px; line-height: 1.05;
+  white-space: normal; max-width: 92px; text-align: center;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 4px #fff, 0 1px 1px rgba(255,255,255,.9);
+  pointer-events: none;
+}
+.hood-label::before { display: none !important; }   /* no arrow */
+.leaflet-container .hood-label { display: none; }     /* hidden until zoomed in… */
+#map.labels-on .hood-label { display: block; }        /* …or hover-forced (desktop) */
+.leaflet-container .hood-label.label-force { display: block; }
+
 /* ---------- Search ---------- */
 .search-wrap {
   position: absolute; z-index: 900;
@@ -296,6 +309,18 @@ body {
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-ghost { background: #f0ede7; color: var(--ink); }
 .btn-danger { background: #e0574a; color: #fff; }
+
+/* Settings option cards */
+.opt-list { display: flex; flex-direction: column; gap: 10px; margin: 2px 0; }
+.opt {
+  text-align: left; width: 100%; display: block; cursor: pointer;
+  border: 2px solid var(--line); background: #fff; border-radius: 14px;
+  padding: 14px 15px; font-family: inherit; transition: border-color .15s, background .15s;
+}
+.opt.sel { border-color: var(--accent); background: #fff7f4; }
+.opt-title { display: block; font-weight: 800; font-size: 15.5px; color: var(--ink); margin-bottom: 4px; }
+.opt.sel .opt-title::after { content: "  ✓"; color: var(--accent); }
+.opt-desc { display: block; font-size: 13px; color: var(--ink-soft); line-height: 1.45; }
 
 /* Borough stat rows */
 .boro-row { margin-bottom: 15px; }

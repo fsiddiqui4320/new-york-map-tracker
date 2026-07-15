@@ -5,7 +5,23 @@
 
   const STATE_KEY = "nyc-tracker-state-v1";
   const COACH_KEY = "nyc-tracker-coach-v1";
+  const SETTINGS_KEY = "nyc-tracker-settings-v1";
   const DATA_URL = "data/neighborhoods.geojson";
+  const LABEL_ZOOM = 13; // labels appear at this zoom and above
+
+  // ---------- Settings ----------
+  const DEFAULT_SETTINGS = { tapMode: "open" }; // 'open' = tap previews; 'mark' = tap colors in
+  let SETTINGS = loadSettings();
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) return Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw));
+    } catch (e) {}
+    return Object.assign({}, DEFAULT_SETTINGS);
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); } catch (e) {}
+  }
 
   // ---------- State ----------
   let STATE = load();
@@ -132,16 +148,40 @@
         const p = feature.properties;
         if (!p.trackable) return;
         hoodLayers[p.id] = layer;
+        layer.bindTooltip(shortLabel(p.name), {
+          permanent: true, direction: "center", className: "hood-label", opacity: 1,
+        });
         if (!isTouch) {
-          layer.bindTooltip(p.name, { className: "hood-tip", sticky: true, direction: "top", offset: [0, -4] });
-          layer.on("mouseover", () => { if (!hoodState(p.id).visited) layer.setStyle({ fillOpacity: 0.18, weight: 1.6 }); });
-          layer.on("mouseout", () => refreshLayer(p.id));
+          layer.on("mouseover", () => {
+            if (!hoodState(p.id).visited) layer.setStyle({ fillOpacity: 0.18, weight: 1.6 });
+            forceLabel(p.id, true);
+          });
+          layer.on("mouseout", () => { refreshLayer(p.id); forceLabel(p.id, false); });
         }
         layer.on("click", () => onHoodTap(p.id));
       },
     }).addTo(map);
 
+    map.on("zoomend", updateLabelVisibility);
     map.fitBounds([[40.495, -74.255], [40.915, -73.70]], { padding: [10, 10] });
+    updateLabelVisibility();
+  }
+
+  // Shorten long combined NTA names for on-map labels (full name stays in the card/search)
+  function shortLabel(name) {
+    if (name.length > 16 && name.includes("-")) return name.split("-")[0].trim();
+    return name;
+  }
+  function updateLabelVisibility() {
+    const on = map.getZoom() >= LABEL_ZOOM;
+    document.getElementById("map").classList.toggle("labels-on", on);
+  }
+  function forceLabel(id, on) {
+    const layer = hoodLayers[id];
+    if (!layer) return;
+    const tip = layer.getTooltip();
+    const node = tip && tip.getElement();
+    if (node) node.classList.toggle("label-force", on);
   }
 
   function refreshLayer(id) {
@@ -150,8 +190,7 @@
   }
 
   function onHoodTap(id) {
-    const st = hoodState(id);
-    if (!st.visited) {
+    if (SETTINGS.tapMode === "mark" && !hoodState(id).visited) {
       setVisited(id, true, /*silent*/ true);
       toast(byId[id].properties.name + " — colored in! 🎨");
     }
@@ -454,6 +493,7 @@
     el.menuPop.hidden = true;
     const act = btn.dataset.act;
     if (act === "stats") showStats();
+    else if (act === "settings") showSettings();
     else if (act === "export") exportData();
     else if (act === "import") el.importInput.click();
     else if (act === "about") showAbout();
@@ -498,6 +538,32 @@
     // animate bars
     requestAnimationFrame(() =>
       el.modal.querySelectorAll(".boro-bar-fill").forEach((f) => (f.style.width = f.dataset.w + "%"))
+    );
+  }
+
+  function showSettings() {
+    const opt = (mode, title, desc) =>
+      `<button class="opt ${SETTINGS.tapMode === mode ? "sel" : ""}" data-mode="${mode}">
+         <span class="opt-title">${title}</span>
+         <span class="opt-desc">${desc}</span>
+       </button>`;
+    openModal(
+      `<h2>Settings</h2>
+       <p class="modal-sub">When you tap a neighborhood on the map…</p>
+       <div class="opt-list">
+         ${opt("open", "Just show me the neighborhood",
+              "Tapping opens the neighborhood's card so you can read the name, notes and photos. You color it in with the “Visited” button — nothing gets marked by accident.")}
+         ${opt("mark", "Color it in right away",
+              "Tapping instantly marks the neighborhood visited and opens its card. Fastest for checking off lots of places quickly.")}
+       </div>
+       <div class="modal-close-row"><button class="btn btn-primary" data-close>Done</button></div>`
+    );
+    el.modal.querySelectorAll(".opt").forEach((b) =>
+      b.addEventListener("click", () => {
+        SETTINGS.tapMode = b.dataset.mode;
+        saveSettings();
+        el.modal.querySelectorAll(".opt").forEach((x) => x.classList.toggle("sel", x === b));
+      })
     );
   }
 
@@ -596,7 +662,10 @@
     const c = document.createElement("div");
     c.className = "coach";
     c.id = "coach";
-    c.innerHTML = 'Zoom in and <b>tap a neighborhood</b> to color it in <button id="coach-ok">Got it</button>';
+    const how = SETTINGS.tapMode === "mark"
+      ? 'tap a neighborhood to <b>color it in</b>'
+      : 'tap a neighborhood, then press <b>Visited</b> to color it in';
+    c.innerHTML = `Zoom in to see names — ${how} <button id="coach-ok">Got it</button>`;
     document.body.appendChild(c);
     $("coach-ok").addEventListener("click", dismissCoach);
   }

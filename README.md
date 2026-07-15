@@ -14,8 +14,13 @@ fill up over the course of your trip.
 
 - 🗺️ **Interactive map** of all five boroughs — zoom and pan, built on real NYC
   neighborhood boundaries (NYC DOHMH Neighborhood Tabulation Areas).
+- 🏷️ **Named neighborhoods** — labels appear right on the map as you zoom in, so
+  you can see where you are without tapping anything.
 - 🎨 **Tap to color in** — each neighborhood gets its own distinct, evenly-spread
   pastel color when you mark it visited.
+- ⚙️ **Choose your tap behavior** (Settings) — either *tap to preview* (opens the
+  card; you color it in with the Visited button, nothing marked by accident) or
+  *tap to color in* (instant, fastest for checking off lots of places).
 - 📝 **Notes** per neighborhood — jot what you did, what you liked, what to come
   back for. Saved automatically.
 - 📷 **Photos** per neighborhood — attach pictures to remember the place. Images
